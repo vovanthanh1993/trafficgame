@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Kamgam/UIToolkitWorldImage/Examples/UI%20Res/WorldlImageDemoStyle.uss?fileID=7433441132597879392&amp;guid=de8d7c9c8d16858489303dee2be61a42&amp;type=3#WorldlImageDemoStyle" />
+    <ui:VisualElement name="Body" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/Kamgam/UIToolkitWorldImage/Examples/Textures/Journal.png?fileID=2800000&amp;guid=f453217149ca3be47a32f79af6871adc&amp;type=3#Journal&apos;); -unity-background-image-tint-color: rgba(255, 255, 255, 0.67); background-color: rgba(0, 0, 0, 0); flex-direction: row; align-items: center; padding-left: 200px; justify-content: space-between; padding-right: 200px;">
+        <Kamgam.UIToolkitWorldImage.WorldImage renderer-id="magic-staff" name="WorldImage-RenderTexture" style="height: 300px; width: 300px; background-color: rgba(255, 255, 255, 0); align-items: flex-start; justify-content: flex-end; display: flex;">
+            <ui:Label text="Default World Image using a Render Texture." display-tooltip-when-elided="true" style="top: 96px; width: 100%; font-size: 22px; white-space: normal;" />
+        </Kamgam.UIToolkitWorldImage.WorldImage>
+        <Kamgam.UIToolkitWorldImage.WorldImage renderer-id="magic-staff-stacking" name="WorldImage-CameraStacking" style="height: 300px; width: 300px; background-color: rgba(255, 255, 255, 0); align-items: flex-start; left: 37px; justify-content: flex-end;">
+            <ui:Label text="Using camera stacking. Notice how the image is BEHIND any other UI." display-tooltip-when-elided="true" style="top: 149px; width: 100%; font-size: 22px; white-space: normal;" />
+        </Kamgam.UIToolkitWorldImage.WorldImage>
+    </ui:VisualElement>
+</ui:UXML>

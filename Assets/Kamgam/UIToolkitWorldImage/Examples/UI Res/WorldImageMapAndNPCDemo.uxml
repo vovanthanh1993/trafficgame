@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Kamgam/UIToolkitWorldImage/Examples/UI%20Res/WorldlImageDemoStyle.uss?fileID=7433441132597879392&amp;guid=de8d7c9c8d16858489303dee2be61a42&amp;type=3#WorldlImageDemoStyle" />
+    <ui:Label text="&lt;b&gt;Portraits&lt;/b&gt; and &lt;b&gt;Mini-Map&lt;/b&gt; Demo" display-tooltip-when-elided="true" name="Title" style="-unity-text-align: middle-center; height: 115px; font-size: 52px; display: flex;" />
+    <ui:VisualElement name="Portraits" style="position: absolute; bottom: -10px; left: -10px; width: 439px; height: 268px; background-image: url(&apos;project://database/Assets/Kamgam/UIToolkitWorldImage/Examples/Textures/ButtonDefault.psd?fileID=21300000&amp;guid=345e9c9d16e7a0647a93777a9d64cf7e&amp;type=3#ButtonDefault&apos;); -unity-background-image-tint-color: rgb(0, 0, 0);">
+        <ui:Label text="Portraits" display-tooltip-when-elided="true" style="top: -1px; color: rgb(255, 255, 255); -unity-font-style: bold; font-size: 26px; margin-left: 20px;" />
+        <Kamgam.UIToolkitWorldImage.WorldImage name="WorldImageRed" renderer-id="red-portrait" style="width: 200px; height: 200px; position: absolute; bottom: 20px; left: 13px;" />
+        <Kamgam.UIToolkitWorldImage.WorldImage name="WorldImageBlue" renderer-id="blue-portrait" style="width: 200px; height: 200px; position: absolute; bottom: 20px; left: 220px;" />
+    </ui:VisualElement>
+    <ui:VisualElement name="Minimap" style="position: absolute; bottom: -10px; width: 300px; height: 334px; right: -10px; background-image: url(&apos;project://database/Assets/Kamgam/UIToolkitWorldImage/Examples/Textures/ButtonDefault.psd?fileID=21300000&amp;guid=345e9c9d16e7a0647a93777a9d64cf7e&amp;type=3#ButtonDefault&apos;); -unity-background-image-tint-color: rgb(0, 0, 0);">
+        <ui:Label text="Mini-Map" display-tooltip-when-elided="true" style="top: 6px; color: rgb(255, 255, 255); -unity-font-style: bold; font-size: 26px; margin-left: 20px;" />
+        <Kamgam.UIToolkitWorldImage.WorldImage renderer-id="mini-map" style="height: 260px; width: 260px; bottom: 20px; right: 20px; position: absolute; display: flex;" />
+    </ui:VisualElement>
+</ui:UXML>
