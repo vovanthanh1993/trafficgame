@@ -50,6 +50,9 @@ namespace DistantLands.Cozy.Data
             if (!Application.isPlaying)
                 return false;
 
+            if (weather == null)
+                return false;
+
             base.InitializeEffect(weather);
 
             if (runtimeRef == null)
@@ -61,7 +64,18 @@ namespace DistantLands.Cozy.Data
                 runtimeRef = new GameObject().AddComponent<AudioSource>();
 
                 runtimeRef.gameObject.name = name;
-                runtimeRef.transform.parent = weather.audioFXParent;
+                
+                // Null check for audioFXParent
+                if (weather.audioFXParent != null)
+                {
+                    runtimeRef.transform.parent = weather.audioFXParent;
+                }
+                else
+                {
+                    // Fallback: parent to weather transform if audioFXParent is null
+                    runtimeRef.transform.parent = weather.transform;
+                }
+                
                 runtimeRef.transform.localPosition = Vector3.zero;
                 runtimeRef.transform.localRotation = Quaternion.identity;
                 runtimeRef.clip = clip;

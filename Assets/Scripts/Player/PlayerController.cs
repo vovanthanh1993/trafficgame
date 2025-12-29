@@ -236,15 +236,6 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("ResetTag"))
-        {
-            // Kiểm tra cooldown để tránh trừ mạng nhiều lần khi va chạm với nhiều ResetTag cùng lúc
-            if (!isReturningToSpawn && Time.time - lastSpawnReturnTime >= spawnReturnCooldown)
-            {
-                ReturnToSpawnPoint();
-            }
-        }
-
         if (other.CompareTag("EndTag"))
         {
             ShowVictory();

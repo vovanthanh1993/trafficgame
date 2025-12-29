@@ -8,12 +8,12 @@ PlayerSettings:
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
-  defaultScreenOrientation: 4
+  defaultScreenOrientation: 2
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
-  productName: Traffic
+  companyName: minigame
+  productName: Pick & Panic
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -158,7 +158,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    Android: com.DefaultCompany.Traffic
+    Android: com.minigame.PickPanic
     Standalone: com.DefaultCompany.Traffic
   buildNumber:
     Standalone: 0
@@ -340,32 +340,38 @@ PlayerSettings:
       m_Height: 36
       m_Kind: 1
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 2800000, guid: 4388bf9a244ce574a9ce310ed488978e, type: 3}
       m_Width: 192
       m_Height: 192
       m_Kind: 0
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 0}
       m_Width: 144
       m_Height: 144
       m_Kind: 0
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 0}
       m_Width: 96
       m_Height: 96
       m_Kind: 0
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 0}
       m_Width: 72
       m_Height: 72
       m_Kind: 0
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 0}
       m_Width: 48
       m_Height: 48
       m_Kind: 0
       m_SubKind: 
-    - m_Textures: []
+    - m_Textures:
+      - {fileID: 0}
       m_Width: 36
       m_Height: 36
       m_Kind: 0
@@ -742,7 +748,7 @@ PlayerSettings:
     PS4: KAMGAM_UITOOLKIT_WORLD_IMAGE
     PS5: KAMGAM_UITOOLKIT_WORLD_IMAGE
     QNX: KAMGAM_UITOOLKIT_WORLD_IMAGE
-    Standalone: KAMGAM_UITOOLKIT_WORLD_IMAGE
+    Standalone: KAMGAM_UITOOLKIT_WORLD_IMAGE;COZY_WEATHER;COZY_3_AND_UP;COZY_URP
     WebGL: KAMGAM_UITOOLKIT_WORLD_IMAGE
     Windows Store Apps: CF_FORCE_MOBILE_MODE;KAMGAM_UITOOLKIT_WORLD_IMAGE
     XboxOne: KAMGAM_UITOOLKIT_WORLD_IMAGE
