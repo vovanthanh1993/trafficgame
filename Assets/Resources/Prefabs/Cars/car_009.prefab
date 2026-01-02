@@ -359,6 +359,11 @@ MonoBehaviour:
   moveSpeed: 8
   moveDirection: {x: 0, y: 0, z: 1}
   isReversing: 0
+  detectionDistance: 8
+  carLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  raycastHeight: 0.5
   wheelTag: 
   wheelRadius: 0.3
   wheelRotationAxis: {x: 1, y: 0, z: 0}

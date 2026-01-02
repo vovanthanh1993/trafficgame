@@ -311,9 +311,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a942e4939bbeb8746adea4f5a9ed8219, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 8
+  moveSpeed: 16
   moveDirection: {x: 0, y: 0, z: 1}
   isReversing: 0
+  detectionDistance: 8
+  carLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  raycastHeight: 0.5
   wheelTag: 
   wheelRadius: 0.3
   wheelRotationAxis: {x: 1, y: 0, z: 0}

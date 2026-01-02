@@ -11,6 +11,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float moveSpeed = 3f;
     [SerializeField] private float rotationSpeed = 10f;
     
+    private float baseMoveSpeed; // Tốc độ gốc
+    private bool isSpeedBoosted = false; // Đang trong trạng thái speed boost
+    
     [Header("Camera Settings")]
     [SerializeField] private Transform camTarget;
 
@@ -51,6 +54,23 @@ public class PlayerController : MonoBehaviour
     [Header("Hit Control Settings")]
     [Tooltip("Thời gian disable điều khiển sau khi bị hit (giây)")]
     [SerializeField] private float hitControlDisableDuration = 1f;
+    
+    [Header("Hit VFX Settings")]
+    [Tooltip("VFX effect khi va chạm với xe (particle, explosion, etc.)")]
+    [SerializeField] private GameObject hitVFXPrefab;
+    
+    [Tooltip("Vị trí spawn VFX (null = vị trí va chạm)")]
+    [SerializeField] private Transform hitVFXSpawnPoint;
+    
+    [Header("Pickup VFX Settings")]
+    [Tooltip("Vị trí spawn VFX khi nhặt item (health, speed)")]
+    [SerializeField] private Transform pickupVFXPoint;
+    
+    [Tooltip("VFX effect khi nhặt Health Item")]
+    [SerializeField] private GameObject healthPickupVFXPrefab;
+    
+    [Tooltip("VFX effect khi nhặt Speed Item")]
+    [SerializeField] private GameObject speedPickupVFXPrefab;
 
     private void Awake()
     {
@@ -86,6 +106,24 @@ public class PlayerController : MonoBehaviour
             }
         }
         
+        // Tự động tìm PickupVFXPoint nếu chưa được assign
+        if (pickupVFXPoint == null)
+        {
+            pickupVFXPoint = transform.Find("PickupVFXPoint");
+            if (pickupVFXPoint == null)
+            {
+                // Tìm trong tất cả các con
+                foreach (Transform child in transform)
+                {
+                    if (child.name == "PickupVFXPoint" || child.name == "VFXPoint")
+                    {
+                        pickupVFXPoint = child;
+                        break;
+                    }
+                }
+            }
+        }
+        
         // Đảm bảo CharacterController tồn tại
         if (characterController == null)
         {
@@ -95,6 +133,9 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
+        // Lưu tốc độ gốc
+        baseMoveSpeed = moveSpeed;
+        
         // Lưu vị trí spawn point
         if (spawnPoint != null)
         {
@@ -248,6 +289,9 @@ public class PlayerController : MonoBehaviour
             // Trigger animation hit và bay về spawn point khi va chạm với xe (có cooldown)
             if (Time.time - lastHitTime >= hitAnimationCooldown)
             {
+                // Spawn VFX effect khi va chạm
+                SpawnHitVFX(transform.position);
+                
                 if (playerAnimation != null)
                 {
                     playerAnimation.SetHit();
@@ -440,6 +484,77 @@ public class PlayerController : MonoBehaviour
     }
     
     /// <summary>
+    /// Spawn VFX effect khi va chạm với xe
+    /// </summary>
+    private void SpawnHitVFX(Vector3 collisionPoint)
+    {
+        if (hitVFXPrefab == null)
+            return;
+        
+        // Xác định vị trí spawn VFX
+        Vector3 spawnPosition = collisionPoint;
+        if (hitVFXSpawnPoint != null)
+        {
+            spawnPosition = hitVFXSpawnPoint.position;
+        }
+        
+        // Spawn VFX
+        GameObject vfx = Instantiate(hitVFXPrefab, spawnPosition, Quaternion.identity);
+        
+        // Tự động destroy VFX sau một khoảng thời gian (nếu VFX không tự destroy)
+        // Có thể điều chỉnh thời gian tùy theo VFX của bạn
+        Destroy(vfx, 3f);
+    }
+    
+    /// <summary>
+    /// Spawn VFX effect khi nhặt Health Item tại VFX point
+    /// </summary>
+    public void SpawnHealthPickupVFX()
+    {
+        if (healthPickupVFXPrefab == null)
+            return;
+        
+        // Xác định vị trí spawn VFX
+        Vector3 spawnPosition = transform.position;
+        Transform parentTransform = null;
+        if (pickupVFXPoint != null)
+        {
+            spawnPosition = pickupVFXPoint.position;
+            parentTransform = pickupVFXPoint;
+        }
+        
+        // Spawn VFX và set làm con của pickupVFXPoint
+        GameObject vfx = Instantiate(healthPickupVFXPrefab, spawnPosition, Quaternion.identity, parentTransform);
+        
+        // Tự động destroy VFX sau một khoảng thời gian (nếu VFX không tự destroy)
+        Destroy(vfx, 0.5f);
+    }
+    
+    /// <summary>
+    /// Spawn VFX effect khi nhặt Speed Item tại VFX point
+    /// </summary>
+    public void SpawnSpeedPickupVFX()
+    {
+        if (speedPickupVFXPrefab == null)
+            return;
+        
+        // Xác định vị trí spawn VFX
+        Vector3 spawnPosition = transform.position;
+        Transform parentTransform = null;
+        if (pickupVFXPoint != null)
+        {
+            spawnPosition = pickupVFXPoint.position;
+            parentTransform = pickupVFXPoint;
+        }
+        
+        // Spawn VFX và set làm con của pickupVFXPoint
+        GameObject vfx = Instantiate(speedPickupVFXPrefab, spawnPosition, Quaternion.identity, parentTransform);
+        
+        // Tự động destroy VFX sau một khoảng thời gian (nếu VFX không tự destroy)
+        Destroy(vfx, 4f);
+    }
+    
+    /// <summary>
     /// Hiển thị victory panel khi đến end gate
     /// </summary>
     private void ShowVictory()
@@ -512,6 +627,41 @@ public class PlayerController : MonoBehaviour
     public Transform GetItemPoint()
     {
         return itemPoint;
+    }
+    
+    /// <summary>
+    /// Kích hoạt speed boost cho player
+    /// </summary>
+    /// <param name="boostAmount">Tốc độ tăng thêm</param>
+    /// <param name="duration">Thời gian boost (giây)</param>
+    public void ActivateSpeedBoost(float boostAmount, float duration)
+    {
+        // Nếu đang có speed boost, reset lại thời gian
+        if (isSpeedBoosted)
+        {
+            StopCoroutine("SpeedBoostCoroutine");
+        }
+        
+        StartCoroutine(SpeedBoostCoroutine(boostAmount, duration));
+    }
+    
+    /// <summary>
+    /// Coroutine để tăng tốc độ trong thời gian nhất định
+    /// </summary>
+    private IEnumerator SpeedBoostCoroutine(float boostAmount, float duration)
+    {
+        isSpeedBoosted = true;
+        moveSpeed = baseMoveSpeed + boostAmount;
+        
+        Debug.Log($"Speed Boost activated! Tốc độ: {moveSpeed} (tăng {boostAmount})");
+        
+        yield return new WaitForSeconds(duration);
+        
+        // Trở về tốc độ gốc
+        moveSpeed = baseMoveSpeed;
+        isSpeedBoosted = false;
+        
+        Debug.Log($"Speed Boost hết hạn! Tốc độ về: {baseMoveSpeed}");
     }
 
     #endregion

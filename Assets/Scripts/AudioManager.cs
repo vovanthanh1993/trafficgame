@@ -317,4 +317,12 @@ public class AudioManager : MonoBehaviour
     public void PlayFallSound() {
         PlaySound("se_fall");
     }
+
+    public void PlayHealSound() {
+        PlaySound("se_heal");
+    }
+
+    public void PlaySpeedSound() {
+        PlaySound("se_runpower");
+    }
 }

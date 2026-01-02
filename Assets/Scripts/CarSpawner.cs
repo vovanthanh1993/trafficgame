@@ -39,6 +39,16 @@ public class CarSpawner : MonoBehaviour
     [Tooltip("Sử dụng object pool (khuyến nghị)")]
     [SerializeField] private bool usePool = true;
     
+    [Header("Spawn Weight Settings")]
+    [Tooltip("Tên các car có tỉ lệ spawn cao hơn (ví dụ: Mtb1, Mtb2)")]
+    [SerializeField] private string[] highSpawnRateCarNames = new string[] { "Mtb1", "Mtb2" };
+    
+    [Tooltip("Trọng số spawn cho các car đặc biệt (càng cao càng dễ spawn)")]
+    [SerializeField] private int highSpawnRateWeight = 5;
+    
+    [Tooltip("Trọng số spawn cho các car thường (mặc định = 1)")]
+    [SerializeField] private int normalSpawnRateWeight = 1;
+    
     private List<Transform> forwardSpawnPoints = new List<Transform>();
     private List<Transform> reverseSpawnPoints = new List<Transform>();
     private List<GameObject> spawnedCars = new List<GameObject>();
@@ -346,7 +356,7 @@ public class CarSpawner : MonoBehaviour
     }
     
     /// <summary>
-    /// Lấy một prefab ngẫu nhiên từ danh sách
+    /// Lấy một prefab ngẫu nhiên từ danh sách (có weighted random cho các car đặc biệt)
     /// </summary>
     private GameObject GetRandomPrefab()
     {
@@ -355,16 +365,59 @@ public class CarSpawner : MonoBehaviour
             return null;
         }
         
-        if (randomPrefab && carPrefabs.Count > 1)
-        {
-            int randomIndex = Random.Range(0, carPrefabs.Count);
-            return carPrefabs[randomIndex];
-        }
-        else
+        if (!randomPrefab || carPrefabs.Count == 1)
         {
             // Nếu không random hoặc chỉ có 1 prefab, trả về prefab đầu tiên
             return carPrefabs[0];
         }
+        
+        // Tạo danh sách weighted cho weighted random
+        List<GameObject> weightedPrefabs = new List<GameObject>();
+        
+        foreach (GameObject prefab in carPrefabs)
+        {
+            if (prefab == null) continue;
+            
+            // Kiểm tra xem prefab có nằm trong danh sách car đặc biệt không
+            bool isHighSpawnRate = IsHighSpawnRateCar(prefab.name);
+            int weight = isHighSpawnRate ? highSpawnRateWeight : normalSpawnRateWeight;
+            
+            // Thêm prefab vào danh sách theo trọng số
+            for (int i = 0; i < weight; i++)
+            {
+                weightedPrefabs.Add(prefab);
+            }
+        }
+        
+        // Chọn ngẫu nhiên từ danh sách weighted
+        if (weightedPrefabs.Count > 0)
+        {
+            int randomIndex = Random.Range(0, weightedPrefabs.Count);
+            return weightedPrefabs[randomIndex];
+        }
+        
+        // Fallback: chọn ngẫu nhiên bình thường
+        int fallbackIndex = Random.Range(0, carPrefabs.Count);
+        return carPrefabs[fallbackIndex];
+    }
+    
+    /// <summary>
+    /// Kiểm tra xem car có nằm trong danh sách car có tỉ lệ spawn cao không
+    /// </summary>
+    private bool IsHighSpawnRateCar(string carName)
+    {
+        if (highSpawnRateCarNames == null || highSpawnRateCarNames.Length == 0)
+            return false;
+        
+        foreach (string highSpawnName in highSpawnRateCarNames)
+        {
+            if (carName.Contains(highSpawnName) || carName.Equals(highSpawnName, System.StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /// <summary>

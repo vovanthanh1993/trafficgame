@@ -126,4 +126,23 @@ public class HealthPanel : MonoBehaviour
     {
         return currentLives > 0;
     }
+    
+    /// <summary>
+    /// Tăng mạng cho player (khi nhặt health item)
+    /// </summary>
+    /// <param name="amount">Số mạng tăng thêm</param>
+    public void AddLife(int amount)
+    {
+        if (amount <= 0)
+        {
+            Debug.LogWarning("HealthPanel: Số mạng tăng phải lớn hơn 0!");
+            return;
+        }
+        
+        // Tăng mạng nhưng không vượt quá maxLives
+        currentLives = Mathf.Min(currentLives + amount, maxLives);
+        UpdateHealthDisplay();
+        
+        Debug.Log($"HealthPanel: Đã tăng {amount} mạng. Số mạng hiện tại: {currentLives}/{maxLives}");
+    }
 }
