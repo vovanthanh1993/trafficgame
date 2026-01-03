@@ -475,7 +475,7 @@ MonoBehaviour:
   currentPrecipitation: 49.92476
   snowAmount: 0
   snowMeltSpeed: 0.35
-  groundwaterAmount: 0.0627929
+  groundwaterAmount: 0.0670696
   dryingSpeed: 0.5
   snowSpeed: 0
   rainSpeed: 0.007
@@ -3671,7 +3671,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthItemPrefab: {fileID: 1586284866332922, guid: 5a98cb783d692744e8e305c5b0b5f551, type: 3}
   speedItemPrefab: {fileID: 1103892459537272, guid: a5bc136c5e87fb14888b1af7d82802f5, type: 3}
-  spawnPointsParent: {fileID: 0}
+  spawnPointsParent: {fileID: 844524329}
   spawnInterval: 20
   spawnOnStart: 1
   initialDelay: 10
@@ -3899,7 +3899,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 24.24871, y: 24.24871, z: 24.24871}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 252931329}
@@ -11319,7 +11319,7 @@ MonoBehaviour:
   rainbowPosition: 20
   rainbowWidth: 2.7
   rainbowTexture: {fileID: 2800000, guid: 6761766a51008e44e8deebc9a15ebde0, type: 3}
-  rainbowIntensity: 0.0627929
+  rainbowIntensity: 0.0670696
   useRainbow: 1
   fogStart1: 5
   fogStart2: 12
@@ -11535,7 +11535,7 @@ Transform:
   m_GameObject: {fileID: 1532935763}
   serializedVersion: 2
   m_LocalRotation: {x: 0.0000000037252899, y: -0, z: -0.0000000074505797, w: 1}
-  m_LocalPosition: {x: -9619.366, y: 6959.3516, z: -3.624018}
+  m_LocalPosition: {x: -13.7, y: 14.82, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

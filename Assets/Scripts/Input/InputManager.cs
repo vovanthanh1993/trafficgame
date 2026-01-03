@@ -24,19 +24,6 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        // Tự động tìm TouchJoystick nếu chưa được assign
-        if (touchJoystick == null)
-        {
-            touchJoystick = FindObjectOfType<TouchJoystick>();
-            if (touchJoystick != null)
-            {
-                Debug.Log("InputManager: Đã tìm thấy TouchJoystick tự động");
-            }
-        }
-    }
-
     public void DisablePlayerInput()
     {
         isInputEnabled = false;
