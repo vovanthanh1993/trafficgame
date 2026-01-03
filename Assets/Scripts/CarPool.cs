@@ -226,11 +226,11 @@ public class CarPool : MonoBehaviour
         car.transform.position = Vector3.zero;
         car.transform.rotation = Quaternion.identity;
         
-        // Reset CarController
+        // Reset CarController về trạng thái ban đầu
         CarController carController = car.GetComponent<CarController>();
         if (carController != null)
         {
-            carController.SetReverse(false);
+            carController.ResetCar();
         }
         
         // Thêm lại vào queue

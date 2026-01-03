@@ -475,7 +475,7 @@ MonoBehaviour:
   currentPrecipitation: 49.92476
   snowAmount: 0
   snowMeltSpeed: 0.35
-  groundwaterAmount: 0.0670696
+  groundwaterAmount: 0.069204584
   dryingSpeed: 0.5
   snowSpeed: 0
   rainSpeed: 0.007
@@ -1586,6 +1586,55 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &313245230
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 313245232}
+  - component: {fileID: 313245231}
+  m_Layer: 0
+  m_Name: CarPool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &313245231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 313245230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e45870f0992e67740b2197c459c80e5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  prefabsFolderPath: Prefabs/Cars
+  autoLoadPrefabs: 1
+  initialPoolSize: 3
+  maxPoolSize: 50
+  autoExpand: 1
+--- !u!4 &313245232
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 313245230}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.92, y: 6.375643, z: -32.338207}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &314298703
 GameObject:
   m_ObjectHideFlags: 0
@@ -3899,7 +3948,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 49.760025, y: 49.760025, z: 49.760025}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 252931329}
@@ -11319,7 +11368,7 @@ MonoBehaviour:
   rainbowPosition: 20
   rainbowWidth: 2.7
   rainbowTexture: {fileID: 2800000, guid: 6761766a51008e44e8deebc9a15ebde0, type: 3}
-  rainbowIntensity: 0.0670696
+  rainbowIntensity: 0.069204584
   useRainbow: 1
   fogStart1: 5
   fogStart2: 12
@@ -11535,7 +11584,7 @@ Transform:
   m_GameObject: {fileID: 1532935763}
   serializedVersion: 2
   m_LocalRotation: {x: 0.0000000037252899, y: -0, z: -0.0000000074505797, w: 1}
-  m_LocalPosition: {x: -13.7, y: 14.82, z: 0}
+  m_LocalPosition: {x: -30.88944, y: 40.956303, z: 32.084778}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -45438,6 +45487,7 @@ SceneRoots:
   - {fileID: 2141307339}
   - {fileID: 1515066565}
   - {fileID: 303519515}
+  - {fileID: 313245232}
   - {fileID: 478219613}
   - {fileID: 167865111}
   - {fileID: 2003235048}

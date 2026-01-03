@@ -224,6 +224,26 @@ public class CarController : MonoBehaviour
         isReversing = reverse;
     }
     
+    /// <summary>
+    /// Reset car về trạng thái ban đầu (dùng khi return về pool)
+    /// </summary>
+    public void ResetCar()
+    {
+        // Reset tốc độ về giá trị gốc (đã bao gồm level boost)
+        moveSpeed = originalSpeed;
+        
+        // Reset các flags
+        wasSlowingDown = false;
+        hasDetectedCar = false;
+        
+        // Reset hướng di chuyển
+        isReversing = false;
+        moveDirection = Vector3.forward;
+        
+        // Reset transform (nếu cần)
+        // transform.position và transform.rotation sẽ được reset bởi CarPool
+    }
+    
     // Xoay bánh xe khi xe di chuyển
     private void RotateWheels()
     {
