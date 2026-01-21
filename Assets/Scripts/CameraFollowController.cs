@@ -24,12 +24,21 @@ public class CameraFollowController : MonoBehaviour
     [Tooltip("Offset từ player (X=0, Y=4, Z=-4)")]
     public Vector3 followOffset = new Vector3(0f, 4f, -4f);
 
+    [Header("X Distance Lock")]
+    [Tooltip("Tự động tính và giữ khoảng cách x ban đầu giữa camera và player")]
+    public bool lockInitialXDistance = true;
+
     private Vector3 velocity;
+    private float initialXDistance; // Khoảng cách x ban đầu giữa camera và player
+    private bool hasCalculatedInitialDistance = false;
 
     private void Start()
     {
         // Tự động tìm player nếu chưa gán
         FindAndSetPlayer();
+        
+        // Tính khoảng cách x ban đầu nếu có target
+        CalculateInitialXDistance();
     }
 
     private void LateUpdate()
@@ -41,7 +50,13 @@ public class CameraFollowController : MonoBehaviour
             return; // Chờ frame tiếp theo nếu vẫn chưa tìm thấy
         }
 
-        // Tính toán vị trí mong muốn
+        // Tính khoảng cách x ban đầu nếu chưa tính (phòng trường hợp target được set sau Start)
+        if (lockInitialXDistance && !hasCalculatedInitialDistance)
+        {
+            CalculateInitialXDistance();
+        }
+
+        // Tính toán vị trí mong muốn chỉ cho trục X
         Vector3 desiredPosition;
         
         if (useWorldSpace)
@@ -55,28 +70,30 @@ public class CameraFollowController : MonoBehaviour
             desiredPosition = target.position + target.rotation * followOffset;
         }
 
+        // Nếu lock khoảng cách x ban đầu, sử dụng khoảng cách đó thay vì offset
+        if (lockInitialXDistance && hasCalculatedInitialDistance)
+        {
+            desiredPosition.x = target.position.x + initialXDistance;
+        }
+
+        // Lưu vị trí hiện tại của camera
+        Vector3 currentPosition = transform.position;
+
         // Follow ngay lập tức hoặc smooth với damping
         if (instantFollow)
         {
-            // Follow ngay lập tức, không có độ trễ
-            transform.position = desiredPosition;
+            // Chỉ follow theo trục X, giữ nguyên Y và Z
+            transform.position = new Vector3(desiredPosition.x, currentPosition.y, currentPosition.z);
         }
         else
         {
-            // Smooth follow với damping
-            Vector3 currentPosition = transform.position;
-            
-            // Sử dụng Vector3.SmoothDamp với damping riêng cho từng trục
+            // Smooth follow với damping chỉ cho trục X
             float smoothX = positionDamping.x > 0 ? 1f / positionDamping.x : 0.1f;
-            float smoothY = positionDamping.y > 0 ? 1f / positionDamping.y : 0.1f;
-            float smoothZ = positionDamping.z > 0 ? 1f / positionDamping.z : 0.1f;
 
-            // Smooth từng trục riêng biệt
+            // Smooth chỉ cho trục X, giữ nguyên Y và Z
             float newX = Mathf.SmoothDamp(currentPosition.x, desiredPosition.x, ref velocity.x, smoothX);
-            float newY = Mathf.SmoothDamp(currentPosition.y, desiredPosition.y, ref velocity.y, smoothY);
-            float newZ = Mathf.SmoothDamp(currentPosition.z, desiredPosition.z, ref velocity.z, smoothZ);
 
-            transform.position = new Vector3(newX, newY, newZ);
+            transform.position = new Vector3(newX, currentPosition.y, currentPosition.z);
         }
     }
 
@@ -105,6 +122,19 @@ public class CameraFollowController : MonoBehaviour
         {
             SetTarget(player.transform);
             Debug.Log($"CameraFollowController: Đã tự động tìm Player '{player.name}'");
+        }
+    }
+
+    /// <summary>
+    /// Tính khoảng cách x ban đầu giữa camera và player
+    /// </summary>
+    private void CalculateInitialXDistance()
+    {
+        if (target != null && lockInitialXDistance)
+        {
+            initialXDistance = transform.position.x - target.position.x;
+            hasCalculatedInitialDistance = true;
+            Debug.Log($"CameraFollowController: Đã tính khoảng cách x ban đầu = {initialXDistance}");
         }
     }
 }

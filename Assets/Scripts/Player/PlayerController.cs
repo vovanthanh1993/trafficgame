@@ -313,6 +313,37 @@ public class PlayerController : MonoBehaviour
             }
         }
         
+        // Kiểm tra va chạm với animal (animal có isTrigger = true)
+        AnimalController animal = other.GetComponent<AnimalController>();
+        if (animal != null)
+        {
+            // Trigger animation hit và bay về spawn point khi va chạm với animal (có cooldown)
+            if (Time.time - lastHitTime >= hitAnimationCooldown)
+            {
+                // Spawn VFX effect khi va chạm
+                SpawnHitVFX(transform.position);
+                
+                if (playerAnimation != null)
+                {
+                    playerAnimation.SetHit();
+                    lastHitTime = Time.time;
+                }
+                
+                // Nếu đang mang item, cho item bay về vị trí ban đầu
+                if (carriedItem != null)
+                {
+                    carriedItem.ReturnToOriginalPosition();
+                    carriedItem = null; // Reset carried item
+                }
+                
+                // Disable điều khiển trong 0.5s sau khi bị hit
+                StartCoroutine(DisableControlAfterHit());
+                
+                // Bay về spawn point (tương tự như khi va chạm với ResetTag)
+                ReturnToSpawnPoint();
+            }
+        }
+        
         // Xử lý checkpoint
         Checkpoint checkpoint = other.GetComponent<Checkpoint>();
         if (checkpoint != null)
