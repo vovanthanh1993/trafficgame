@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 public class PlayerController : MonoBehaviour
 {
@@ -21,8 +23,11 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Điểm để hiển thị item khi đã nhặt")]
     [SerializeField] private Transform itemPoint;
     
-    // Item đang được mang theo (chỉ 1 item)
-    private Item carriedItem = null;
+    [Tooltip("Khoảng cách offset giữa các items khi xếp chồng (theo trục Y)")]
+    [SerializeField] private float itemStackOffset = 0.5f;
+    
+    // Danh sách items đang được mang theo (có thể nhặt nhiều items)
+    private List<Item> carriedItems = new List<Item>();
 
     [Header("Spawn Settings")]
     [Tooltip("Vị trí spawn point (nếu null sẽ dùng vị trí ban đầu của player)")]
@@ -298,17 +303,33 @@ public class PlayerController : MonoBehaviour
                     lastHitTime = Time.time;
                 }
                 
-                // Nếu đang mang item, cho item bay về vị trí ban đầu
-                if (carriedItem != null)
+                // Nếu đang mang items, cho tất cả items bay về vị trí ban đầu
+                if (carriedItems.Count > 0)
                 {
-                    carriedItem.ReturnToOriginalPosition();
-                    carriedItem = null; // Reset carried item
+                    // Drop tất cả items và update UI
+                    foreach (Item item in carriedItems.ToList())
+                    {
+                        if (item != null)
+                        {
+                            ItemType droppedItemType = item.ItemType;
+                            item.ReturnToOriginalPosition();
+                            
+                            // Update UI quest khi drop item
+                            if (QuestManager.Instance != null)
+                            {
+                                QuestManager.Instance.OnItemDropped(droppedItemType);
+                            }
+                        }
+                    }
+                    
+                    // Clear danh sách items
+                    carriedItems.Clear();
                 }
                 
                 // Disable điều khiển trong 0.5s sau khi bị hit
                 StartCoroutine(DisableControlAfterHit());
                 
-                // Bay về spawn point (tương tự như khi va chạm với ResetTag)
+                // Bay về spawn point và trừ mạng (khi va chạm với xe)
                 ReturnToSpawnPoint();
             }
         }
@@ -329,18 +350,34 @@ public class PlayerController : MonoBehaviour
                     lastHitTime = Time.time;
                 }
                 
-                // Nếu đang mang item, cho item bay về vị trí ban đầu
-                if (carriedItem != null)
+                // Nếu đang mang items, cho tất cả items bay về vị trí ban đầu
+                if (carriedItems.Count > 0)
                 {
-                    carriedItem.ReturnToOriginalPosition();
-                    carriedItem = null; // Reset carried item
+                    // Drop tất cả items và update UI
+                    foreach (Item item in carriedItems.ToList())
+                    {
+                        if (item != null)
+                        {
+                            ItemType droppedItemType = item.ItemType;
+                            item.ReturnToOriginalPosition();
+                            
+                            // Update UI quest khi drop item
+                            if (QuestManager.Instance != null)
+                            {
+                                QuestManager.Instance.OnItemDropped(droppedItemType);
+                            }
+                        }
+                    }
+                    
+                    // Clear danh sách items
+                    carriedItems.Clear();
                 }
                 
                 // Disable điều khiển trong 0.5s sau khi bị hit
                 StartCoroutine(DisableControlAfterHit());
                 
-                // Bay về spawn point (tương tự như khi va chạm với ResetTag)
-                ReturnToSpawnPoint();
+                // Bay về spawn point nhưng KHÔNG trừ mạng (khi va chạm với animal)
+                ReturnToSpawnPointWithoutLosingLife();
             }
         }
         
@@ -360,11 +397,11 @@ public class PlayerController : MonoBehaviour
     {
         // Kiểm tra va chạm với item (item không phải trigger)
         Item item = hit.gameObject.GetComponent<Item>();
-        if (item != null && carriedItem == null && !item.IsPickedUp && !item.IsCollected)
+        if (item != null && !item.IsPickedUp && !item.IsCollected)
         {
-            // Chỉ lượm được nếu chưa có item nào đang mang
-            // Lấy ItemPoint
-            Transform itemPointTransform = GetItemPoint();
+            // Có thể nhặt nhiều items
+            // Tính toán vị trí item point với offset dựa trên số lượng items đã có
+            Transform itemPointTransform = GetItemPointForNewItem();
             
             // Lượm item (chưa tính điểm)
             item.PickupItem(itemPointTransform);
@@ -375,45 +412,61 @@ public class PlayerController : MonoBehaviour
     }
     
     /// <summary>
-    /// Lượm item (chỉ lượm được 1 item) - được gọi từ Item
+    /// Lượm item (có thể nhặt nhiều items) - được gọi từ Item
     /// </summary>
     public void PickupItem(Item item)
     {
-        if (carriedItem != null)
+        if (item == null)
         {
-            Debug.Log("Đã có item đang mang theo, không thể lượm thêm!");
             return;
         }
         
-        carriedItem = item;
+        // Thêm item vào danh sách
+        if (!carriedItems.Contains(item))
+        {
+            carriedItems.Add(item);
+            
+            // Update UI quest ngay khi nhặt item
+            if (QuestManager.Instance != null)
+            {
+                QuestManager.Instance.OnItemPickedUp(item.ItemType);
+            }
+            
+            Debug.Log($"Đã nhặt item {item.ItemType}. Tổng số items: {carriedItems.Count}");
+        }
     }
     
     /// <summary>
-    /// Thả item tại checkpoint
+    /// Thả tất cả items tại checkpoint (giữ lại để tương thích, nhưng Checkpoint sẽ tự xử lý)
     /// </summary>
     public void DropItemAtCheckpoint(Transform checkpointPosition)
     {
-        if (carriedItem == null)
+        if (carriedItems.Count == 0)
         {
             Debug.Log("Không có item để thả!");
             return;
         }
         
-        // Lưu item type trước khi thả
-        ItemType itemType = carriedItem.ItemType;
-        
-        // Thả item tại checkpoint với callback để tính điểm sau khi animation hoàn thành
-        carriedItem.DropItemAtCheckpoint(checkpointPosition, () =>
+        // Thả tất cả items tại checkpoint (dùng cùng một vị trí nếu được gọi trực tiếp)
+        foreach (Item item in carriedItems.ToList())
         {
-            // Tính điểm khi animation thả item hoàn thành
-            if (QuestManager.Instance != null)
+            if (item != null)
             {
-                QuestManager.Instance.OnItemCollected(itemType);
+                // Thả item tại checkpoint với callback để tính điểm sau khi animation hoàn thành
+                // Lưu ý: Progress đã được tăng khi nhặt item, nên không cần tăng lại ở đây
+                item.DropItemAtCheckpoint(checkpointPosition, () =>
+                {
+                    // Chỉ update UI để refresh (progress đã được tăng khi nhặt item)
+                    if (QuestManager.Instance != null)
+                    {
+                        QuestManager.Instance.UpdateQuestUI();
+                    }
+                });
             }
-        });
+        }
         
-        // Reset carried item
-        carriedItem = null;
+        // Clear danh sách items
+        carriedItems.Clear();
     }
     
     /// <summary>
@@ -421,15 +474,39 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     public bool HasCarriedItem()
     {
-        return carriedItem != null;
+        return carriedItems.Count > 0;
     }
     
     /// <summary>
-    /// Lấy item đang mang theo
+    /// Lấy số lượng items đang mang
+    /// </summary>
+    public int GetCarriedItemCount()
+    {
+        return carriedItems.Count;
+    }
+    
+    /// <summary>
+    /// Lấy danh sách items đang mang theo
+    /// </summary>
+    public List<Item> GetCarriedItems()
+    {
+        return new List<Item>(carriedItems);
+    }
+    
+    /// <summary>
+    /// Clear tất cả items đang mang (không drop, chỉ xóa khỏi danh sách)
+    /// </summary>
+    public void ClearCarriedItems()
+    {
+        carriedItems.Clear();
+    }
+    
+    /// <summary>
+    /// Lấy item đang mang theo (giữ lại để tương thích, trả về item đầu tiên)
     /// </summary>
     public Item GetCarriedItem()
     {
-        return carriedItem;
+        return carriedItems.Count > 0 ? carriedItems[0] : null;
     }
     
     /// <summary>
@@ -468,8 +545,31 @@ public class PlayerController : MonoBehaviour
             characterController.enabled = false;
         }
         
+        // Tìm spawn point gần nhất có x < player.x
+        Vector3 targetPosition = initialSpawnPosition; // Fallback về vị trí ban đầu
+        
+        if (PlayerSpawnPointManager.Instance != null)
+        {
+            Transform nearestSpawnPoint = PlayerSpawnPointManager.Instance.FindNearestSpawnPointBehindPlayer(transform.position);
+            if (nearestSpawnPoint != null)
+            {
+                targetPosition = nearestSpawnPoint.position;
+                Debug.Log($"Player sẽ spawn tại spawn point: {nearestSpawnPoint.name}");
+            }
+            else
+            {
+                // Nếu không tìm thấy, dùng spawn point cũ hoặc initial position
+                targetPosition = spawnPoint != null ? spawnPoint.position : initialSpawnPosition;
+                Debug.LogWarning("Không tìm thấy spawn point phù hợp, dùng spawn point mặc định");
+            }
+        }
+        else
+        {
+            // Nếu không có PlayerSpawnPointManager, dùng spawn point cũ
+            targetPosition = spawnPoint != null ? spawnPoint.position : initialSpawnPosition;
+        }
+        
         // Teleport về spawn point
-        Vector3 targetPosition = spawnPoint != null ? spawnPoint.position : initialSpawnPosition;
         transform.position = targetPosition;
         
         // Bật lại CharacterController
@@ -478,7 +578,70 @@ public class PlayerController : MonoBehaviour
             characterController.enabled = true;
         }
         
-        Debug.Log("Player đã quay về spawn point!");
+        Debug.Log($"Player đã quay về spawn point tại {targetPosition}!");
+        
+        // Reset flag sau một khoảng thời gian ngắn để cho phép xử lý lần tiếp theo
+        StartCoroutine(ResetSpawnReturnFlag());
+    }
+    
+    /// <summary>
+    /// Quay về spawn point nhưng KHÔNG trừ mạng (dùng khi va chạm với animal)
+    /// </summary>
+    private void ReturnToSpawnPointWithoutLosingLife()
+    {
+        // Đánh dấu đang trong quá trình về spawn để tránh xử lý nhiều lần
+        if (isReturningToSpawn)
+        {
+            return;
+        }
+        
+        isReturningToSpawn = true;
+        lastSpawnReturnTime = Time.time;
+        
+        AudioManager.Instance.PlayFallSound();
+        
+        // KHÔNG trừ mạng khi va chạm với animal
+        
+        // Tắt CharacterController tạm thời để teleport
+        if (characterController != null)
+        {
+            characterController.enabled = false;
+        }
+        
+        // Tìm spawn point gần nhất có x < player.x
+        Vector3 targetPosition = initialSpawnPosition; // Fallback về vị trí ban đầu
+        
+        if (PlayerSpawnPointManager.Instance != null)
+        {
+            Transform nearestSpawnPoint = PlayerSpawnPointManager.Instance.FindNearestSpawnPointBehindPlayer(transform.position);
+            if (nearestSpawnPoint != null)
+            {
+                targetPosition = nearestSpawnPoint.position;
+                Debug.Log($"Player sẽ spawn tại spawn point: {nearestSpawnPoint.name} (không trừ mạng)");
+            }
+            else
+            {
+                // Nếu không tìm thấy, dùng spawn point cũ hoặc initial position
+                targetPosition = spawnPoint != null ? spawnPoint.position : initialSpawnPosition;
+                Debug.LogWarning("Không tìm thấy spawn point phù hợp, dùng spawn point mặc định");
+            }
+        }
+        else
+        {
+            // Nếu không có PlayerSpawnPointManager, dùng spawn point cũ
+            targetPosition = spawnPoint != null ? spawnPoint.position : initialSpawnPosition;
+        }
+        
+        // Teleport về spawn point
+        transform.position = targetPosition;
+        
+        // Bật lại CharacterController
+        if (characterController != null)
+        {
+            characterController.enabled = true;
+        }
+        
+        Debug.Log($"Player đã quay về spawn point tại {targetPosition} (không trừ mạng)!");
         
         // Reset flag sau một khoảng thời gian ngắn để cho phép xử lý lần tiếp theo
         StartCoroutine(ResetSpawnReturnFlag());
@@ -658,6 +821,30 @@ public class PlayerController : MonoBehaviour
     public Transform GetItemPoint()
     {
         return itemPoint;
+    }
+    
+    /// <summary>
+    /// Lấy ItemPoint transform với offset cho item mới (để xếp chồng nhiều items)
+    /// </summary>
+    private Transform GetItemPointForNewItem()
+    {
+        if (itemPoint == null)
+        {
+            return null;
+        }
+        
+        // Tính toán offset dựa trên số lượng items hiện có
+        int itemCount = carriedItems.Count;
+        float offsetY = itemCount * itemStackOffset;
+        
+        // Tạo một GameObject tạm thời để làm item point với offset
+        // GameObject này sẽ được cleanup khi item được drop hoặc return
+        GameObject tempItemPoint = new GameObject($"ItemPoint_{itemCount}");
+        tempItemPoint.transform.SetParent(itemPoint);
+        tempItemPoint.transform.localPosition = new Vector3(0, offsetY, 0);
+        tempItemPoint.transform.localRotation = Quaternion.identity;
+        
+        return tempItemPoint.transform;
     }
     
     /// <summary>

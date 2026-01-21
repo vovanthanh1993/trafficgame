@@ -83,10 +83,10 @@ public class Item : MonoBehaviour
         // Chỉ player mới có thể lượm
         if (collision.gameObject.CompareTag("Player") && !isPickedUp && !isCollected)
         {
-            // Kiểm tra xem player đã có item chưa
-            if (PlayerController.Instance != null && !PlayerController.Instance.HasCarriedItem())
+            // Có thể nhặt nhiều items, không cần check HasCarriedItem
+            if (PlayerController.Instance != null)
             {
-                // Lấy ItemPoint từ PlayerController
+                // Lấy ItemPoint từ PlayerController (với offset nếu có nhiều items)
                 Transform itemPoint = PlayerController.Instance.GetItemPoint();
                 
                 // Lượm item (chưa tính điểm)
@@ -274,7 +274,15 @@ public class Item : MonoBehaviour
         }
         
         // Remove parent trước khi bắt đầu animation
+        // Cleanup transform tạm thời nếu có (ItemPoint_0, ItemPoint_1, ...)
+        Transform tempParent = transform.parent;
         transform.SetParent(null);
+        
+        // Nếu parent là transform tạm thời (có tên bắt đầu bằng "ItemPoint_"), destroy nó
+        if (tempParent != null && tempParent.name.StartsWith("ItemPoint_"))
+        {
+            Destroy(tempParent.gameObject);
+        }
         
         float elapsedTime = 0f;
         
@@ -416,9 +424,17 @@ public class Item : MonoBehaviour
         StopAllCoroutines();
         
         // Remove parent ngay lập tức để item không còn ở ItemPoint
+        // Cleanup transform tạm thời nếu có (ItemPoint_0, ItemPoint_1, ...)
         if (transform.parent != null)
         {
+            Transform parentTransform = transform.parent;
             transform.SetParent(null);
+            
+            // Nếu parent là transform tạm thời (có tên bắt đầu bằng "ItemPoint_"), destroy nó
+            if (parentTransform != null && parentTransform.name.StartsWith("ItemPoint_"))
+            {
+                Destroy(parentTransform.gameObject);
+            }
         }
         
         // Đảm bảo item không còn ở vị trí ItemPoint bằng cách lấy world position

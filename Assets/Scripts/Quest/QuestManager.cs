@@ -103,25 +103,63 @@ public class QuestManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Được gọi khi player thả item tại checkpoint
+    /// Được gọi khi player nhặt item (update UI ngay lập tức)
     /// </summary>
-    public void OnItemCollected(ItemType itemType)
+    public void OnItemPickedUp(ItemType itemType)
     {
         if (!progress.ContainsKey(itemType))
             return;
 
         progress[itemType]++;
 
-        Debug.Log($"{itemType} collected: {progress[itemType]} / {GetRequiredAmount(itemType)}");
+        Debug.Log($"{itemType} picked up: {progress[itemType]} / {GetRequiredAmount(itemType)}");
 
+        // Cập nhật objectives panel ngay lập tức
+        UpdateQuestUI();
+
+        // Kiểm tra xem đã hoàn thành quest chưa
+        CheckQuestComplete();
+    }
+    
+    /// <summary>
+    /// Được gọi khi player drop item (do va chạm với car/animal)
+    /// </summary>
+    public void OnItemDropped(ItemType itemType)
+    {
+        if (!progress.ContainsKey(itemType))
+            return;
+
+        // Giảm progress khi drop item
+        if (progress[itemType] > 0)
+        {
+            progress[itemType]--;
+        }
+
+        Debug.Log($"{itemType} dropped: {progress[itemType]} / {GetRequiredAmount(itemType)}");
+
+        // Cập nhật objectives panel ngay lập tức
+        UpdateQuestUI();
+    }
+    
+    /// <summary>
+    /// Được gọi khi player thả item tại checkpoint (giữ lại để tương thích)
+    /// </summary>
+    public void OnItemCollected(ItemType itemType)
+    {
+        // Progress đã được tăng khi nhặt item, chỉ cần update UI
+        UpdateQuestUI();
+    }
+    
+    /// <summary>
+    /// Cập nhật UI quest
+    /// </summary>
+    public void UpdateQuestUI()
+    {
         // Cập nhật objectives panel
         if (GUIPanel.Instance != null && GUIPanel.Instance.objectivesPanelComponent != null)
         {
             GUIPanel.Instance.objectivesPanelComponent.UpdateProgress();
         }
-
-        // Kiểm tra xem đã hoàn thành quest chưa sau mỗi lần thả animal
-        CheckQuestComplete();
     }
     
     /// <summary>

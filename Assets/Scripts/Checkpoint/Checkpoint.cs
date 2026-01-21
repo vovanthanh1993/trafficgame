@@ -119,17 +119,48 @@ public class Checkpoint : MonoBehaviour
         // Kiểm tra xem player có đang mang item không
         if (player.HasCarriedItem())
         {
-            // Lấy ngẫu nhiên một điểm drop từ danh sách
-            Transform dropPosition = GetRandomDropPosition();
+            // Lấy danh sách items đang mang (bản copy để tránh modify trong khi iterate)
+            List<Item> itemsToDrop = new List<Item>(player.GetCarriedItems());
             
-            if (dropPosition == null)
+            if (itemsToDrop == null || itemsToDrop.Count == 0)
             {
-                Debug.LogWarning("Checkpoint: Không có điểm drop nào khả dụng!");
+                Debug.Log("Bạn cần mang item để thả tại checkpoint!");
                 return;
             }
             
-            // Thả item tại checkpoint
-            player.DropItemAtCheckpoint(dropPosition);
+            // Thả từng item tại các vị trí khác nhau
+            foreach (Item item in itemsToDrop)
+            {
+                if (item == null) continue;
+                
+                // Lấy ngẫu nhiên một điểm drop từ danh sách
+                Transform dropPosition = GetRandomDropPosition();
+                
+                if (dropPosition == null)
+                {
+                    Debug.LogWarning("Checkpoint: Không có điểm drop nào khả dụng!");
+                    continue;
+                }
+                
+                // Thả item tại checkpoint
+                item.DropItemAtCheckpoint(dropPosition, () =>
+                {
+                    // Chỉ update UI để refresh (progress đã được tăng khi nhặt item)
+                    if (QuestManager.Instance != null)
+                    {
+                        QuestManager.Instance.UpdateQuestUI();
+                    }
+                });
+                
+                // Spawn effect tại vị trí drop
+                if (dropEffect != null)
+                {
+                    Instantiate(dropEffect, dropPosition.position, Quaternion.identity);
+                }
+            }
+            
+            // Clear danh sách items trong player
+            player.ClearCarriedItems();
             
             // Play checkpoint sound
             if (AudioManager.Instance != null)
@@ -137,13 +168,7 @@ public class Checkpoint : MonoBehaviour
                 AudioManager.Instance.PlayCheckpointSound();
             }
             
-            // Spawn effect tại vị trí drop
-            if (dropEffect != null)
-            {
-                Instantiate(dropEffect, dropPosition.position, Quaternion.identity);
-            }
-            
-            Debug.Log("Đã thả item tại checkpoint!");
+            Debug.Log($"Đã thả {itemsToDrop.Count} item(s) tại checkpoint!");
         }
         else
         {

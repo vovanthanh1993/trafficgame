@@ -35,11 +35,7 @@ public class ObjectiveItem : MonoBehaviour
         if (objective == null)
             return;
         
-        // Nếu đã hoàn thành thì không update nữa
-        if (isCompleted)
-            return;
-        
-        // Update item progress từ QuestManager
+        // Update item progress từ QuestManager (luôn cập nhật, không check isCompleted)
         if (QuestManager.Instance != null && QuestManager.Instance.progress != null)
         {
             if (QuestManager.Instance.progress.ContainsKey(objective.itemType))
@@ -56,11 +52,16 @@ public class ObjectiveItem : MonoBehaviour
             currentProgress = 0;
         }
         
-        // Kiểm tra và đánh dấu hoàn thành
+        // Kiểm tra và đánh dấu hoàn thành (hoặc reset nếu progress giảm)
         if (currentProgress >= objective.requiredAmount)
         {
             isCompleted = true;
             currentProgress = objective.requiredAmount; // Đảm bảo không vượt quá
+        }
+        else
+        {
+            // Nếu progress giảm xuống dưới requiredAmount, reset trạng thái completed
+            isCompleted = false;
         }
         
         UpdateUI();
