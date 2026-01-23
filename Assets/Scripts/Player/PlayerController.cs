@@ -955,6 +955,12 @@ public class PlayerController : MonoBehaviour
         lastSlowSkillTime = Time.time;
         slowSkillEndTime = Time.time + duration; // Track thời gian slow skill kết thúc
         
+        // Phát sound effect khi kích hoạt slow skill
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySlowTimeSound();
+        }
+        
         Debug.Log($"PlayerController: Kích hoạt slow skill - Giảm {slowPercent * 100}% tốc độ trong {duration} giây");
         
         // Tìm tất cả CarController trong scene

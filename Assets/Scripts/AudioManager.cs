@@ -325,4 +325,8 @@ public class AudioManager : MonoBehaviour
     public void PlaySpeedSound() {
         PlaySound("se_runpower");
     }
+
+    public void PlaySlowTimeSound() {
+        PlaySound("se_slowtime");
+    }
 }

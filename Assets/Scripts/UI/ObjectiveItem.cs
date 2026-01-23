@@ -92,7 +92,8 @@ public class ObjectiveItem : MonoBehaviour
         {
             // Khi hoàn thành: chỉ hiển thị requiredAmount/requiredAmount, không hiển thị số lớn hơn
             text = $"{displayName}: {objective.requiredAmount}/{objective.requiredAmount}";
-            objectiveText.text = text;
+            // Gạch ngang ở giữa và màu #796847
+            objectiveText.text = $"<s><color=#796847>{text}</color></s>";
             Debug.Log($"ObjectiveItem: UI cập nhật - {text} (completed)");
         }
         else
