@@ -21,7 +21,7 @@ public class SpeedItem : MonoBehaviour
     
     [Header("Auto Destroy Settings")]
     [Tooltip("Tự động xóa item sau bao nhiêu giây (0 = không tự động xóa)")]
-    [SerializeField] private float autoDestroyDelay = 10f;
+    [SerializeField] private float autoDestroyDelay = 30f;
     
     private bool isCollected = false;
     

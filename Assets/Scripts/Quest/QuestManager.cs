@@ -103,51 +103,60 @@ public class QuestManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Được gọi khi player nhặt item (update UI ngay lập tức)
+    /// Được gọi khi player nhặt item (KHÔNG tăng progress, chỉ update UI)
+    /// Progress chỉ được tính khi thả item tại checkpoint
     /// </summary>
     public void OnItemPickedUp(ItemType itemType)
     {
-        if (!progress.ContainsKey(itemType))
-            return;
+        // KHÔNG tăng progress khi nhặt item
+        // Progress chỉ được tính khi thả item tại checkpoint
 
-        progress[itemType]++;
+        Debug.Log($"{itemType} picked up (chưa tính progress)");
 
-        Debug.Log($"{itemType} picked up: {progress[itemType]} / {GetRequiredAmount(itemType)}");
-
-        // Cập nhật objectives panel ngay lập tức
+        // Cập nhật objectives panel (hiển thị số item đang mang, không phải progress)
         UpdateQuestUI();
-
-        // Kiểm tra xem đã hoàn thành quest chưa
-        CheckQuestComplete();
     }
     
     /// <summary>
     /// Được gọi khi player drop item (do va chạm với car/animal)
+    /// KHÔNG giảm progress vì progress chưa được tính khi nhặt
     /// </summary>
     public void OnItemDropped(ItemType itemType)
     {
-        if (!progress.ContainsKey(itemType))
-            return;
+        // KHÔNG giảm progress vì progress chỉ được tính khi thả tại checkpoint
+        // Item rớt do va chạm không ảnh hưởng đến progress
 
-        // Giảm progress khi drop item
-        if (progress[itemType] > 0)
-        {
-            progress[itemType]--;
-        }
+        Debug.Log($"{itemType} dropped (không ảnh hưởng progress)");
 
-        Debug.Log($"{itemType} dropped: {progress[itemType]} / {GetRequiredAmount(itemType)}");
-
-        // Cập nhật objectives panel ngay lập tức
+        // Cập nhật objectives panel
         UpdateQuestUI();
     }
     
     /// <summary>
-    /// Được gọi khi player thả item tại checkpoint (giữ lại để tương thích)
+    /// Được gọi khi player thả item tại checkpoint - TÍNH PROGRESS TẠI ĐÂY
     /// </summary>
     public void OnItemCollected(ItemType itemType)
     {
-        // Progress đã được tăng khi nhặt item, chỉ cần update UI
+        Debug.Log($"QuestManager: OnItemCollected được gọi cho {itemType}");
+        
+        if (!progress.ContainsKey(itemType))
+        {
+            Debug.LogWarning($"QuestManager: Không tìm thấy progress key cho {itemType}");
+            return;
+        }
+
+        // Tăng progress khi thả item tại checkpoint
+        progress[itemType]++;
+
+        Debug.Log($"{itemType} collected at checkpoint: {progress[itemType]} / {GetRequiredAmount(itemType)}");
+
+        // Cập nhật objectives panel
+        Debug.Log("QuestManager: Đang cập nhật UI...");
         UpdateQuestUI();
+        Debug.Log("QuestManager: Đã cập nhật UI");
+
+        // Kiểm tra xem đã hoàn thành quest chưa
+        CheckQuestComplete();
     }
     
     /// <summary>
@@ -156,9 +165,21 @@ public class QuestManager : MonoBehaviour
     public void UpdateQuestUI()
     {
         // Cập nhật objectives panel
-        if (GUIPanel.Instance != null && GUIPanel.Instance.objectivesPanelComponent != null)
+        if (GUIPanel.Instance != null)
         {
+            if (GUIPanel.Instance.objectivesPanelComponent != null)
+            {
+                Debug.Log("QuestManager: Gọi UpdateProgress trên ObjectivesPanel");
             GUIPanel.Instance.objectivesPanelComponent.UpdateProgress();
+            }
+            else
+            {
+                Debug.LogWarning("QuestManager: objectivesPanelComponent là null!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("QuestManager: GUIPanel.Instance là null!");
         }
     }
     

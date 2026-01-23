@@ -33,22 +33,29 @@ public class ObjectiveItem : MonoBehaviour
     public void UpdateProgress()
     {
         if (objective == null)
+        {
+            Debug.LogWarning("ObjectiveItem: objective là null!");
             return;
+        }
         
         // Update item progress từ QuestManager (luôn cập nhật, không check isCompleted)
         if (QuestManager.Instance != null && QuestManager.Instance.progress != null)
         {
             if (QuestManager.Instance.progress.ContainsKey(objective.itemType))
             {
+                int oldProgress = currentProgress;
                 currentProgress = QuestManager.Instance.progress[objective.itemType];
+                Debug.Log($"ObjectiveItem: {objective.itemType} progress cập nhật từ {oldProgress} -> {currentProgress}");
             }
             else
             {
+                Debug.LogWarning($"ObjectiveItem: Không tìm thấy progress key cho {objective.itemType}");
                 currentProgress = 0;
             }
         }
         else
         {
+            Debug.LogWarning("ObjectiveItem: QuestManager.Instance hoặc progress là null!");
             currentProgress = 0;
         }
         
@@ -73,7 +80,10 @@ public class ObjectiveItem : MonoBehaviour
     private void UpdateUI()
     {
         if (objective == null || objectiveText == null)
+        {
+            Debug.LogWarning("ObjectiveItem: objective hoặc objectiveText là null!");
             return;
+        }
         
         string displayName = objective.itemType.ToString();
         string text;
@@ -82,14 +92,15 @@ public class ObjectiveItem : MonoBehaviour
         {
             // Khi hoàn thành: chỉ hiển thị requiredAmount/requiredAmount, không hiển thị số lớn hơn
             text = $"{displayName}: {objective.requiredAmount}/{objective.requiredAmount}";
-            // Gạch ngang ở giữa và màu #796847
-            objectiveText.text = $"<s><color=#796847>{text}</color></s>";
+            objectiveText.text = text;
+            Debug.Log($"ObjectiveItem: UI cập nhật - {text} (completed)");
         }
         else
         {
             // Chưa hoàn thành: hiển thị progress bình thường
             text = $"{displayName}: {currentProgress}/{objective.requiredAmount}";
             objectiveText.text = text;
+            Debug.Log($"ObjectiveItem: UI cập nhật - {text} (not completed)");
         }
     }
 }

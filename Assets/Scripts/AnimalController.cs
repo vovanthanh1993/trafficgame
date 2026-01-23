@@ -24,6 +24,14 @@ public class AnimalController : MonoBehaviour
     private bool wasSlowingDown = false; // Để track trạng thái giảm tốc độ
     private bool hasDetectedObstacle = false; // Đã phát hiện vật thể phía trước, ngừng kiểm tra raycast
     private bool levelBoostApplied = false; // Đã áp dụng level boost chưa
+    private Coroutine slowEffectCoroutine; // Coroutine để quản lý slow effect
+    private bool isSlowed = false; // Đang trong trạng thái bị làm chậm
+    private float speedBeforeSlow = 0f; // Lưu tốc độ trước khi slow để restore sau
+    
+    [Header("Animation Settings")]
+    [Tooltip("Animator component của animal (tự động lấy nếu null)")]
+    private Animator animator;
+    private float originalAnimationSpeed = 1f; // Tốc độ animation gốc
     
     [Header("Limit Detection")]
     public string limitTag = "Limit"; // Tag của đối tượng limit
@@ -34,6 +42,16 @@ public class AnimalController : MonoBehaviour
         if (baseSpeed == 0)
         {
             baseSpeed = moveSpeed;
+        }
+        
+        // Tự động lấy Animator component nếu chưa có
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            if (animator != null)
+            {
+                originalAnimationSpeed = animator.speed;
+            }
         }
     }
     
@@ -51,6 +69,12 @@ public class AnimalController : MonoBehaviour
         moveSpeed = originalSpeed;
         wasSlowingDown = false;
         hasDetectedObstacle = false; // Reset flag khi spawn lại
+        
+        // Reset animation speed về bình thường
+        if (animator != null)
+        {
+            animator.speed = originalAnimationSpeed;
+        }
     }
     
     /// <summary>
@@ -179,12 +203,87 @@ public class AnimalController : MonoBehaviour
     }
     
     /// <summary>
+    /// Áp dụng slow effect (làm chậm tốc độ) trong thời gian nhất định
+    /// </summary>
+    /// <param name="slowPercent">Phần trăm giảm tốc độ (0.5 = giảm 50%)</param>
+    /// <param name="duration">Thời gian slow effect (giây)</param>
+    public void ApplySlowEffect(float slowPercent, float duration)
+    {
+        // Dừng coroutine cũ nếu có
+        if (slowEffectCoroutine != null)
+        {
+            StopCoroutine(slowEffectCoroutine);
+        }
+        
+        // Bắt đầu coroutine mới
+        slowEffectCoroutine = StartCoroutine(SlowEffectCoroutine(slowPercent, duration));
+    }
+    
+    /// <summary>
+    /// Coroutine để áp dụng và tự động restore tốc độ sau khi hết thời gian
+    /// </summary>
+    private System.Collections.IEnumerator SlowEffectCoroutine(float slowPercent, float duration)
+    {
+        isSlowed = true;
+        
+        // Lưu tốc độ hiện tại (có thể đã bị giảm do phát hiện vật thể phía trước)
+        speedBeforeSlow = moveSpeed;
+        
+        // Set tốc độ về 1 khi slow skill active
+        moveSpeed = 1f;
+        
+        // Làm chậm animation nếu có Animator
+        // Tính animation speed dựa trên tỷ lệ giữa tốc độ mới (1) và tốc độ trước khi slow
+        if (animator != null && speedBeforeSlow > 0)
+        {
+            float animationSpeedRatio = 1f / speedBeforeSlow;
+            animator.speed = originalAnimationSpeed * animationSpeedRatio;
+            Debug.Log($"AnimalController: Animation speed giảm từ {originalAnimationSpeed:F2} xuống {animator.speed:F2} (tỷ lệ: {animationSpeedRatio:F2})");
+        }
+        
+        Debug.Log($"AnimalController: Áp dụng slow effect - Tốc độ: {speedBeforeSlow:F2} -> 1.00");
+        
+        // Đợi duration giây
+        yield return new WaitForSeconds(duration);
+        
+        // Restore tốc độ về giá trị trước khi slow (không phải originalSpeed)
+        moveSpeed = speedBeforeSlow;
+        
+        // Restore animation speed về bình thường
+        if (animator != null)
+        {
+            animator.speed = originalAnimationSpeed;
+            Debug.Log($"AnimalController: Animation speed đã restore về {originalAnimationSpeed:F2}");
+        }
+        
+        isSlowed = false;
+        
+        Debug.Log($"AnimalController: Slow effect hết hạn - Tốc độ đã restore về {speedBeforeSlow:F2} (tốc độ trước khi slow)");
+        
+        slowEffectCoroutine = null;
+    }
+    
+    /// <summary>
     /// Reset animal về trạng thái ban đầu (dùng khi return về pool)
     /// </summary>
     public void ResetAnimal()
     {
+        // Dừng slow effect nếu đang chạy
+        if (slowEffectCoroutine != null)
+        {
+            StopCoroutine(slowEffectCoroutine);
+            slowEffectCoroutine = null;
+        }
+        
         // Reset tốc độ về giá trị gốc (đã bao gồm level boost)
         moveSpeed = originalSpeed;
+        isSlowed = false;
+        
+        // Reset animation speed về bình thường
+        if (animator != null)
+        {
+            animator.speed = originalAnimationSpeed;
+        }
         
         // Reset các flags
         wasSlowingDown = false;

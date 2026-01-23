@@ -84,6 +84,12 @@ public class CarSpawner : MonoBehaviour
                 {
                     if (Time.time - forwardGroupLastSpawnTimes[i] >= spawnInterval)
                     {
+                        // Kiểm tra slow skill có đang active hoặc trong thời gian delay không
+                        if (PlayerController.Instance != null && PlayerController.Instance.IsInSlowSkillSpawnBlock())
+                        {
+                            continue; // Bỏ qua spawn nếu slow skill đang active hoặc trong delay
+                        }
+                        
                         if (maxCarsOnScene <= 0 || spawnedCars.Count < maxCarsOnScene)
                         {
                             SpawnCarFromGroup(forwardSpawnPointGroups[i], false, i);
@@ -97,6 +103,12 @@ public class CarSpawner : MonoBehaviour
                 {
                     if (Time.time - reverseGroupLastSpawnTimes[i] >= spawnInterval)
                     {
+                        // Kiểm tra slow skill có đang active hoặc trong thời gian delay không
+                        if (PlayerController.Instance != null && PlayerController.Instance.IsInSlowSkillSpawnBlock())
+                        {
+                            continue; // Bỏ qua spawn nếu slow skill đang active hoặc trong delay
+                        }
+                        
                         if (maxCarsOnScene <= 0 || spawnedCars.Count < maxCarsOnScene)
                         {
                             SpawnCarFromGroup(reverseSpawnPointGroups[i], true, i);
@@ -110,9 +122,15 @@ public class CarSpawner : MonoBehaviour
                 // Cách cũ: spawn chung tất cả
                 if (Time.time - lastSpawnTime >= spawnInterval)
                 {
-                    if (maxCarsOnScene <= 0 || spawnedCars.Count < maxCarsOnScene)
+                    // Kiểm tra slow skill có đang active hoặc trong thời gian delay không
+                    if (PlayerController.Instance != null && PlayerController.Instance.IsInSlowSkillSpawnBlock())
+                    {
+                        // Bỏ qua spawn nếu slow skill đang active hoặc trong delay
+                    }
+                    else if (maxCarsOnScene <= 0 || spawnedCars.Count < maxCarsOnScene)
                     {
                         SpawnSingleCar();
+                        lastSpawnTime = Time.time;
                     }
                 }
             }

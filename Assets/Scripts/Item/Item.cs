@@ -17,7 +17,7 @@ public class Item : MonoBehaviour
     [Tooltip("Thời gian animation thu nhỏ và bay lên (giây)")]
     [SerializeField] private float pickupAnimationDuration = 0.5f;
     
-    [Tooltip("Scale cuối cùng khi thu nhỏ (0.5 = 50% kích thước ban đầu)")]
+    [Tooltip("Scale cuối cùng khi thu nhỏ (0.1 = 10% kích thước ban đầu)")]
     [SerializeField] private float finalScale = 0.5f;
     
     [Tooltip("Độ cao bay lên trước khi đến ItemPoint")]
@@ -86,8 +86,8 @@ public class Item : MonoBehaviour
             // Có thể nhặt nhiều items, không cần check HasCarriedItem
             if (PlayerController.Instance != null)
             {
-                // Lấy ItemPoint từ PlayerController (với offset nếu có nhiều items)
-                Transform itemPoint = PlayerController.Instance.GetItemPoint();
+                // Lấy ItemPoint từ PlayerController với offset (dựa trên số items hiện có)
+                Transform itemPoint = PlayerController.Instance.GetItemPointForNewItem();
                 
                 // Lượm item (chưa tính điểm)
                 PickupItem(itemPoint);
@@ -169,8 +169,11 @@ public class Item : MonoBehaviour
             elapsedTime += Time.deltaTime;
             float t = elapsedTime / pickupAnimationDuration;
             
-            // Easing function (ease out)
-            float easeT = 1f - Mathf.Pow(1f - t, 3f);
+            // Easing function cho scale (ease in - thu nhỏ nhanh hơn ở đầu)
+            float scaleEaseT = Mathf.Pow(t, 2f); // Ease in để thu nhỏ nhanh hơn
+            
+            // Easing function cho position (ease out)
+            float positionEaseT = 1f - Mathf.Pow(1f - t, 3f);
             
             // Tính toán vị trí theo đường cong (bay lên cao rồi xuống)
             Vector3 currentPosition;
@@ -187,9 +190,9 @@ public class Item : MonoBehaviour
                 currentPosition = Vector3.Lerp(midPosition, targetPosition, localT);
             }
             
-            // Cập nhật vị trí và scale
+            // Cập nhật vị trí và scale (scale thu nhỏ nhanh hơn)
             transform.position = currentPosition;
-            transform.localScale = Vector3.Lerp(startScale, targetScale, easeT);
+            transform.localScale = Vector3.Lerp(startScale, targetScale, scaleEaseT);
             
             yield return null;
         }
@@ -202,6 +205,8 @@ public class Item : MonoBehaviour
         transform.SetParent(itemPoint);
         transform.localRotation = Quaternion.identity;
         transform.localPosition = Vector3.zero;
+        
+        Debug.Log($"Item: Set parent to {itemPoint.name}, localPosition = {transform.localPosition}, worldPosition = {transform.position}, parent worldPosition = {itemPoint.position}");
         
         isAnimating = false;
     }

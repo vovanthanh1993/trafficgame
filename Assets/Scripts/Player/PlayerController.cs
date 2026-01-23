@@ -16,6 +16,14 @@ public class PlayerController : MonoBehaviour
     private float baseMoveSpeed; // Tốc độ gốc
     private bool isSpeedBoosted = false; // Đang trong trạng thái speed boost
     
+    [Header("Slow Skill Settings")]
+    [Tooltip("Thời gian cooldown của slow skill (giây)")]
+    [SerializeField] private float slowSkillCooldown = 60f;
+    [Tooltip("Thời gian delay sau khi slow skill kết thúc trước khi spawn lại xe/animal (giây)")]
+    [SerializeField] private float slowSkillSpawnDelay = 2f;
+    private float lastSlowSkillTime; // Thời gian lần cuối kích hoạt slow skill
+    private float slowSkillEndTime = -1f; // Thời gian slow skill kết thúc (-1 = không active)
+    
     [Header("Camera Settings")]
     [SerializeField] private Transform camTarget;
 
@@ -24,7 +32,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Transform itemPoint;
     
     [Tooltip("Khoảng cách offset giữa các items khi xếp chồng (theo trục Y)")]
-    [SerializeField] private float itemStackOffset = 0.5f;
+    [SerializeField] private float itemStackOffset = 0.4f;
     
     // Danh sách items đang được mang theo (có thể nhặt nhiều items)
     private List<Item> carriedItems = new List<Item>();
@@ -86,6 +94,9 @@ public class PlayerController : MonoBehaviour
         }
 
         Instance = this;
+        
+        // Khởi tạo slow skill để sẵn sàng ngay từ đầu
+        lastSlowSkillTime = Time.time - slowSkillCooldown - 1f;
         
         // Get components
         if (characterController == null)
@@ -303,27 +314,36 @@ public class PlayerController : MonoBehaviour
                     lastHitTime = Time.time;
                 }
                 
-                // Nếu đang mang items, cho tất cả items bay về vị trí ban đầu
+                // Nếu đang mang items, rớt 2 item nhặt vào sau cùng (2 item cuối cùng)
                 if (carriedItems.Count > 0)
                 {
-                    // Drop tất cả items và update UI
-                    foreach (Item item in carriedItems.ToList())
+                    // Lấy số lượng item cần rớt (tối đa 2 item)
+                    int itemsToDrop = Mathf.Min(2, carriedItems.Count);
+                    
+                    // Rớt 2 item cuối cùng (nhặt vào sau cùng) và update UI
+                    for (int i = 0; i < itemsToDrop; i++)
                     {
-                        if (item != null)
+                        if (carriedItems.Count > 0)
                         {
-                            ItemType droppedItemType = item.ItemType;
-                            item.ReturnToOriginalPosition();
-                            
-                            // Update UI quest khi drop item
-                            if (QuestManager.Instance != null)
+                            // Lấy item cuối cùng (nhặt vào sau cùng)
+                            int lastIndex = carriedItems.Count - 1;
+                            Item item = carriedItems[lastIndex];
+                            if (item != null)
                             {
-                                QuestManager.Instance.OnItemDropped(droppedItemType);
+                                ItemType droppedItemType = item.ItemType;
+                                item.ReturnToOriginalPosition();
+                                
+                                // Xóa item khỏi danh sách (xóa item cuối cùng)
+                                carriedItems.RemoveAt(lastIndex);
+                                
+                                // Update UI quest khi drop item
+                                if (QuestManager.Instance != null)
+                                {
+                                    QuestManager.Instance.OnItemDropped(droppedItemType);
+                                }
                             }
                         }
                     }
-                    
-                    // Clear danh sách items
-                    carriedItems.Clear();
                 }
                 
                 // Disable điều khiển trong 0.5s sau khi bị hit
@@ -350,27 +370,36 @@ public class PlayerController : MonoBehaviour
                     lastHitTime = Time.time;
                 }
                 
-                // Nếu đang mang items, cho tất cả items bay về vị trí ban đầu
+                // Nếu đang mang items, rớt 2 item nhặt vào sau cùng (2 item cuối cùng)
                 if (carriedItems.Count > 0)
                 {
-                    // Drop tất cả items và update UI
-                    foreach (Item item in carriedItems.ToList())
+                    // Lấy số lượng item cần rớt (tối đa 2 item)
+                    int itemsToDrop = Mathf.Min(2, carriedItems.Count);
+                    
+                    // Rớt 2 item cuối cùng (nhặt vào sau cùng) và update UI
+                    for (int i = 0; i < itemsToDrop; i++)
                     {
-                        if (item != null)
+                        if (carriedItems.Count > 0)
                         {
-                            ItemType droppedItemType = item.ItemType;
-                            item.ReturnToOriginalPosition();
-                            
-                            // Update UI quest khi drop item
-                            if (QuestManager.Instance != null)
+                            // Lấy item cuối cùng (nhặt vào sau cùng)
+                            int lastIndex = carriedItems.Count - 1;
+                            Item item = carriedItems[lastIndex];
+                            if (item != null)
                             {
-                                QuestManager.Instance.OnItemDropped(droppedItemType);
+                                ItemType droppedItemType = item.ItemType;
+                                item.ReturnToOriginalPosition();
+                                
+                                // Xóa item khỏi danh sách (xóa item cuối cùng)
+                                carriedItems.RemoveAt(lastIndex);
+                                
+                                // Update UI quest khi drop item
+                                if (QuestManager.Instance != null)
+                                {
+                                    QuestManager.Instance.OnItemDropped(droppedItemType);
+                                }
                             }
                         }
                     }
-                    
-                    // Clear danh sách items
-                    carriedItems.Clear();
                 }
                 
                 // Disable điều khiển trong 0.5s sau khi bị hit
@@ -750,13 +779,13 @@ public class PlayerController : MonoBehaviour
     
     /// <summary>
     /// Hiển thị victory panel khi đến end gate
+    /// Kiểm tra win khi đến checkpoint (progress đã được tính khi nhặt item)
     /// </summary>
     private void ShowVictory()
     {
-        // Kiểm tra xem đã collect đủ animal và đến endgate chưa
+        // Kiểm tra xem đã nhặt đủ items chưa (progress đã được tính khi nhặt)
         if (QuestManager.Instance != null)
         {
-            // Kiểm tra và hoàn thành quest nếu đã collect đủ
             QuestManager.Instance.CheckAndCompleteQuest();
         }
         else
@@ -826,7 +855,7 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// Lấy ItemPoint transform với offset cho item mới (để xếp chồng nhiều items)
     /// </summary>
-    private Transform GetItemPointForNewItem()
+    public Transform GetItemPointForNewItem()
     {
         if (itemPoint == null)
         {
@@ -837,14 +866,120 @@ public class PlayerController : MonoBehaviour
         int itemCount = carriedItems.Count;
         float offsetY = itemCount * itemStackOffset;
         
+        Debug.Log($"GetItemPointForNewItem: itemCount = {itemCount}, itemStackOffset = {itemStackOffset}, offsetY = {offsetY}");
+        Debug.Log($"GetItemPointForNewItem: itemPoint scale = {itemPoint.localScale}, position = {itemPoint.position}");
+        
         // Tạo một GameObject tạm thời để làm item point với offset
         // GameObject này sẽ được cleanup khi item được drop hoặc return
         GameObject tempItemPoint = new GameObject($"ItemPoint_{itemCount}");
         tempItemPoint.transform.SetParent(itemPoint);
-        tempItemPoint.transform.localPosition = new Vector3(0, offsetY, 0);
+        
+        // Nếu itemPoint có scale khác 1, cần điều chỉnh offset
+        // localPosition sẽ bị scale bởi parent scale
+        Vector3 parentScale = itemPoint.localScale;
+        float adjustedOffsetY = offsetY / parentScale.y; // Điều chỉnh offset theo scale của parent
+        
+        tempItemPoint.transform.localPosition = new Vector3(0, adjustedOffsetY, 0);
         tempItemPoint.transform.localRotation = Quaternion.identity;
         
+        Debug.Log($"GetItemPointForNewItem: Created tempItemPoint at localPosition (0, {adjustedOffsetY}, 0), worldPosition = {tempItemPoint.transform.position}, parentScale.y = {parentScale.y}");
+        
         return tempItemPoint.transform;
+    }
+    
+    /// <summary>
+    /// Kiểm tra xem slow skill có sẵn sàng sử dụng không (đã hết cooldown)
+    /// </summary>
+    public bool IsSlowSkillReady()
+    {
+        float timeSinceLastUse = Time.time - lastSlowSkillTime;
+        return timeSinceLastUse >= slowSkillCooldown;
+    }
+    
+    /// <summary>
+    /// Lấy thời gian cooldown còn lại của slow skill (giây)
+    /// </summary>
+    public float GetSlowSkillCooldownRemaining()
+    {
+        float timeSinceLastUse = Time.time - lastSlowSkillTime;
+        float remaining = slowSkillCooldown - timeSinceLastUse;
+        return Mathf.Max(0f, remaining);
+    }
+    
+    /// <summary>
+    /// Lấy tổng thời gian cooldown của slow skill (giây)
+    /// </summary>
+    public float GetSlowSkillCooldownTotal()
+    {
+        return slowSkillCooldown;
+    }
+    
+    /// <summary>
+    /// Kiểm tra xem slow skill có đang active không (đang trong thời gian slow effect)
+    /// </summary>
+    public bool IsSlowSkillActive()
+    {
+        return slowSkillEndTime > 0 && Time.time < slowSkillEndTime;
+    }
+    
+    /// <summary>
+    /// Kiểm tra xem có đang trong thời gian không được spawn (slow skill active hoặc delay sau slow skill)
+    /// </summary>
+    public bool IsInSlowSkillSpawnBlock()
+    {
+        if (slowSkillEndTime <= 0)
+            return false; // Slow skill chưa từng được kích hoạt
+        
+        // Kiểm tra xem có đang trong thời gian slow skill hoặc delay sau slow skill không
+        float spawnBlockEndTime = slowSkillEndTime + slowSkillSpawnDelay;
+        return Time.time < spawnBlockEndTime;
+    }
+    
+    /// <summary>
+    /// Kích hoạt skill làm chậm tốc độ xe và animal trong 3 giây
+    /// </summary>
+    /// <param name="slowPercent">Phần trăm giảm tốc độ (0.8 = giảm 80%, còn 20% tốc độ, mặc định)</param>
+    /// <param name="duration">Thời gian slow effect (giây, mặc định 3 giây)</param>
+    /// <returns>True nếu skill được kích hoạt thành công, False nếu đang trong cooldown</returns>
+    public bool ActivateSlowSkill(float slowPercent = 0.8f, float duration = 3f)
+    {
+        // Kiểm tra cooldown
+        if (!IsSlowSkillReady())
+        {
+            float remaining = GetSlowSkillCooldownRemaining();
+            Debug.LogWarning($"PlayerController: Slow skill đang trong cooldown! Còn lại {remaining:F1} giây");
+            return false;
+        }
+        
+        // Cập nhật thời gian sử dụng skill
+        lastSlowSkillTime = Time.time;
+        slowSkillEndTime = Time.time + duration; // Track thời gian slow skill kết thúc
+        
+        Debug.Log($"PlayerController: Kích hoạt slow skill - Giảm {slowPercent * 100}% tốc độ trong {duration} giây");
+        
+        // Tìm tất cả CarController trong scene
+        CarController[] allCars = FindObjectsOfType<CarController>();
+        foreach (CarController car in allCars)
+        {
+            if (car != null)
+            {
+                car.ApplySlowEffect(slowPercent, duration);
+            }
+        }
+        
+        // Tìm tất cả AnimalController trong scene
+        AnimalController[] allAnimals = FindObjectsOfType<AnimalController>();
+        foreach (AnimalController animal in allAnimals)
+        {
+            if (animal != null)
+            {
+                animal.ApplySlowEffect(slowPercent, duration);
+            }
+        }
+        
+        Debug.Log($"PlayerController: Đã áp dụng slow effect cho {allCars.Length} xe và {allAnimals.Length} animal. Cooldown: {slowSkillCooldown} giây");
+        
+        return true;
     }
     
     /// <summary>

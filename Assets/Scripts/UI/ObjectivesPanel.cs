@@ -108,16 +108,27 @@ public class ObjectivesPanel : MonoBehaviour
     public void UpdateProgress()
     {
         if (QuestManager.Instance == null)
+        {
+            Debug.LogWarning("ObjectivesPanel: QuestManager.Instance là null!");
             return;
+        }
+        
+        Debug.Log($"ObjectivesPanel: Đang cập nhật progress cho {objectiveItems.Count} objectives");
         
         foreach (var item in objectiveItems)
         {
             if (item != null)
             {
-                // Update animal progress
+                // Update item progress
                 item.UpdateProgress();
             }
+            else
+            {
+                Debug.LogWarning("ObjectivesPanel: Có objective item null trong danh sách!");
+            }
         }
+        
+        Debug.Log("ObjectivesPanel: Đã cập nhật tất cả objectives");
     }
     
     /// <summary>

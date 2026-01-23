@@ -24,6 +24,14 @@ public class CarController : MonoBehaviour
     private bool wasSlowingDown = false; // Để track trạng thái giảm tốc độ
     private bool hasDetectedCar = false; // Đã phát hiện xe phía trước, ngừng kiểm tra raycast
     private bool levelBoostApplied = false; // Đã áp dụng level boost chưa
+    private Coroutine slowEffectCoroutine; // Coroutine để quản lý slow effect
+    private bool isSlowed = false; // Đang trong trạng thái bị làm chậm
+    private float speedBeforeSlow = 0f; // Lưu tốc độ trước khi slow để restore sau
+    
+    [Header("Animation Settings")]
+    [Tooltip("Animator component của character trong xe (để null nếu không có)")]
+    [SerializeField] private Animator characterAnimator;
+    private float originalCharacterAnimationSpeed = 1f; // Tốc độ animation gốc của character
     
     [Header("Wheel Settings")]
     [Tooltip("Bật/tắt quay bánh xe")]
@@ -50,6 +58,12 @@ public class CarController : MonoBehaviour
         {
             baseSpeed = moveSpeed;
         }
+        
+        // Lưu animation speed gốc nếu có Animator
+        if (characterAnimator != null)
+        {
+            originalCharacterAnimationSpeed = characterAnimator.speed;
+        }
     }
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -69,6 +83,18 @@ public class CarController : MonoBehaviour
         moveSpeed = originalSpeed;
         wasSlowingDown = false;
         hasDetectedCar = false; // Reset flag khi spawn lại
+        
+        // Reset animation speed của character về bình thường
+        if (characterAnimator != null)
+        {
+            characterAnimator.speed = originalCharacterAnimationSpeed;
+        }
+        
+        // Reset animation speed của character về bình thường
+        if (characterAnimator != null)
+        {
+            characterAnimator.speed = originalCharacterAnimationSpeed;
+        }
     }
     
     /// <summary>
@@ -225,12 +251,87 @@ public class CarController : MonoBehaviour
     }
     
     /// <summary>
+    /// Áp dụng slow effect (làm chậm tốc độ) trong thời gian nhất định
+    /// </summary>
+    /// <param name="slowPercent">Phần trăm giảm tốc độ (0.5 = giảm 50%)</param>
+    /// <param name="duration">Thời gian slow effect (giây)</param>
+    public void ApplySlowEffect(float slowPercent, float duration)
+    {
+        // Dừng coroutine cũ nếu có
+        if (slowEffectCoroutine != null)
+        {
+            StopCoroutine(slowEffectCoroutine);
+        }
+        
+        // Bắt đầu coroutine mới
+        slowEffectCoroutine = StartCoroutine(SlowEffectCoroutine(slowPercent, duration));
+    }
+    
+    /// <summary>
+    /// Coroutine để áp dụng và tự động restore tốc độ sau khi hết thời gian
+    /// </summary>
+    private System.Collections.IEnumerator SlowEffectCoroutine(float slowPercent, float duration)
+    {
+        isSlowed = true;
+        
+        // Lưu tốc độ hiện tại (có thể đã bị giảm do phát hiện xe phía trước)
+        speedBeforeSlow = moveSpeed;
+        
+        // Set tốc độ về 1 khi slow skill active
+        moveSpeed = 1f;
+        
+        // Làm chậm animation của character nếu có Animator
+        // Tính animation speed dựa trên tỷ lệ giữa tốc độ mới (1) và tốc độ trước khi slow
+        if (characterAnimator != null && speedBeforeSlow > 0)
+        {
+            float animationSpeedRatio = 1f / speedBeforeSlow;
+            characterAnimator.speed = originalCharacterAnimationSpeed * animationSpeedRatio;
+            Debug.Log($"CarController: Character animation speed giảm từ {originalCharacterAnimationSpeed:F2} xuống {characterAnimator.speed:F2} (tỷ lệ: {animationSpeedRatio:F2})");
+        }
+        
+        Debug.Log($"CarController: Áp dụng slow effect - Tốc độ: {speedBeforeSlow:F2} -> 1.00");
+        
+        // Đợi duration giây
+        yield return new WaitForSeconds(duration);
+        
+        // Restore tốc độ về giá trị trước khi slow (không phải originalSpeed)
+        moveSpeed = speedBeforeSlow;
+        
+        // Restore animation speed của character về bình thường
+        if (characterAnimator != null)
+        {
+            characterAnimator.speed = originalCharacterAnimationSpeed;
+            Debug.Log($"CarController: Character animation speed đã restore về {originalCharacterAnimationSpeed:F2}");
+        }
+        
+        isSlowed = false;
+        
+        Debug.Log($"CarController: Slow effect hết hạn - Tốc độ đã restore về {speedBeforeSlow:F2} (tốc độ trước khi slow)");
+        
+        slowEffectCoroutine = null;
+    }
+    
+    /// <summary>
     /// Reset car về trạng thái ban đầu (dùng khi return về pool)
     /// </summary>
     public void ResetCar()
     {
+        // Dừng slow effect nếu đang chạy
+        if (slowEffectCoroutine != null)
+        {
+            StopCoroutine(slowEffectCoroutine);
+            slowEffectCoroutine = null;
+        }
+        
         // Reset tốc độ về giá trị gốc (đã bao gồm level boost)
         moveSpeed = originalSpeed;
+        isSlowed = false;
+        
+        // Reset animation speed của character về bình thường
+        if (characterAnimator != null)
+        {
+            characterAnimator.speed = originalCharacterAnimationSpeed;
+        }
         
         // Reset các flags
         wasSlowingDown = false;

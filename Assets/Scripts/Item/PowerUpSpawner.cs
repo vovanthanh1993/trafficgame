@@ -19,7 +19,7 @@ public class PowerUpSpawner : MonoBehaviour
     
     [Header("Spawn Timing")]
     [Tooltip("Thời gian giữa mỗi lần spawn (giây)")]
-    [SerializeField] private float spawnInterval = 20f;
+    [SerializeField] private float spawnInterval = 40f;
     
     [Tooltip("Tự động spawn khi Start")]
     [SerializeField] private bool spawnOnStart = true;

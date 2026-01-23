@@ -142,13 +142,23 @@ public class Checkpoint : MonoBehaviour
                     continue;
                 }
                 
-                // Thả item tại checkpoint
+                // Lưu ItemType trước khi thả để dùng trong callback
+                ItemType itemTypeToCollect = item.ItemType;
+                Debug.Log($"Checkpoint: Đang thả item {itemTypeToCollect} tại checkpoint");
+                
+                // Thả item tại checkpoint - tính progress sau khi animation hoàn thành
                 item.DropItemAtCheckpoint(dropPosition, () =>
                 {
-                    // Chỉ update UI để refresh (progress đã được tăng khi nhặt item)
+                    // Callback sau khi animation hoàn thành - tính progress và update UI
+                    Debug.Log($"Checkpoint: Animation hoàn thành cho item {itemTypeToCollect}, đang tính progress");
+                    
                     if (QuestManager.Instance != null)
                     {
-                        QuestManager.Instance.UpdateQuestUI();
+                        QuestManager.Instance.OnItemCollected(itemTypeToCollect);
+                    }
+                    else
+                    {
+                        Debug.LogError("Checkpoint: QuestManager.Instance là null!");
                     }
                 });
                 
@@ -169,10 +179,21 @@ public class Checkpoint : MonoBehaviour
             }
             
             Debug.Log($"Đã thả {itemsToDrop.Count} item(s) tại checkpoint!");
+            
+            // Progress sẽ được tính trong callback sau khi animation hoàn thành
+            // Kiểm tra win sẽ được gọi trong CheckQuestComplete() sau khi tăng progress
+        }
+        else
+        {
+            // Nếu không có item để thả, kiểm tra xem đã đủ progress chưa (trường hợp đã nhặt đủ item trước đó)
+            if (QuestManager.Instance != null)
+            {
+                QuestManager.Instance.CheckAndCompleteQuest();
         }
         else
         {
             Debug.Log("Bạn cần mang item để thả tại checkpoint!");
+            }
         }
     }
     
