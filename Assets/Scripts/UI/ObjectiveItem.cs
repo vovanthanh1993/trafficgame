@@ -29,6 +29,8 @@ public class ObjectiveItem : MonoBehaviour
     
     /// <summary>
     /// Cập nhật progress từ QuestManager
+    /// Hiển thị: progress (đã thả tại checkpoint) + số lượng đang mang
+    /// Chỉ gạch ngang khi progress (đã thả) >= requiredAmount
     /// </summary>
     public void UpdateProgress()
     {
@@ -38,32 +40,44 @@ public class ObjectiveItem : MonoBehaviour
             return;
         }
         
-        // Update item progress từ QuestManager (luôn cập nhật, không check isCompleted)
+        // Lấy progress từ QuestManager
+        int progressValue = 0;
         if (QuestManager.Instance != null && QuestManager.Instance.progress != null)
         {
             if (QuestManager.Instance.progress.ContainsKey(objective.itemType))
             {
-                int oldProgress = currentProgress;
-                currentProgress = QuestManager.Instance.progress[objective.itemType];
-                Debug.Log($"ObjectiveItem: {objective.itemType} progress cập nhật từ {oldProgress} -> {currentProgress}");
+                progressValue = QuestManager.Instance.progress[objective.itemType];
             }
-            else
-            {
-                Debug.LogWarning($"ObjectiveItem: Không tìm thấy progress key cho {objective.itemType}");
-                currentProgress = 0;
-            }
-        }
-        else
-        {
-            Debug.LogWarning("ObjectiveItem: QuestManager.Instance hoặc progress là null!");
-            currentProgress = 0;
         }
         
-        // Kiểm tra và đánh dấu hoàn thành (hoặc reset nếu progress giảm)
-        if (currentProgress >= objective.requiredAmount)
+        // Đếm số lượng item đang mang từ PlayerController
+        int carriedCount = 0;
+        if (PlayerController.Instance != null)
+        {
+            var carriedItems = PlayerController.Instance.GetCarriedItems();
+            if (carriedItems != null)
+            {
+                foreach (var item in carriedItems)
+                {
+                    if (item != null && item.ItemType == objective.itemType)
+                    {
+                        carriedCount++;
+                    }
+                }
+            }
+        }
+        
+        // Hiển thị: progress (đã thả tại checkpoint) + số lượng đang mang
+        int oldProgress = currentProgress;
+        currentProgress = progressValue + carriedCount;
+        Debug.Log($"ObjectiveItem: {objective.itemType} progress = {progressValue} (đã thả), đang mang = {carriedCount}, tổng hiển thị = {currentProgress}");
+        
+        // Chỉ gạch ngang khi đã thả tại checkpoint (progressValue > 0) và progressValue >= requiredAmount
+        // KHÔNG tính số lượng đang mang vào việc check completed
+        if (progressValue > 0 && progressValue >= objective.requiredAmount)
         {
             isCompleted = true;
-            currentProgress = objective.requiredAmount; // Đảm bảo không vượt quá
+            // KHÔNG giới hạn currentProgress, cho phép vượt quá requiredAmount
         }
         else
         {
@@ -90,11 +104,11 @@ public class ObjectiveItem : MonoBehaviour
         
         if (isCompleted)
         {
-            // Khi hoàn thành: chỉ hiển thị requiredAmount/requiredAmount, không hiển thị số lớn hơn
-            text = $"{displayName}: {objective.requiredAmount}/{objective.requiredAmount}";
+            // Khi hoàn thành: hiển thị progress thực tế (có thể vượt quá requiredAmount)
+            text = $"{displayName}: {currentProgress}/{objective.requiredAmount}";
             // Gạch ngang ở giữa và màu #796847
             objectiveText.text = $"<s><color=#796847>{text}</color></s>";
-            Debug.Log($"ObjectiveItem: UI cập nhật - {text} (completed)");
+            Debug.Log($"ObjectiveItem: UI cập nhật - {text} (completed, có thể vượt quá)");
         }
         else
         {

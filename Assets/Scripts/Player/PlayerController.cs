@@ -328,21 +328,21 @@ public class PlayerController : MonoBehaviour
                             // Lấy item cuối cùng (nhặt vào sau cùng)
                             int lastIndex = carriedItems.Count - 1;
                             Item item = carriedItems[lastIndex];
-                            if (item != null)
-                            {
-                                ItemType droppedItemType = item.ItemType;
-                                item.ReturnToOriginalPosition();
+                        if (item != null)
+                        {
+                            ItemType droppedItemType = item.ItemType;
+                            item.ReturnToOriginalPosition();
                                 
                                 // Xóa item khỏi danh sách (xóa item cuối cùng)
                                 carriedItems.RemoveAt(lastIndex);
-                                
-                                // Update UI quest khi drop item
-                                if (QuestManager.Instance != null)
-                                {
-                                    QuestManager.Instance.OnItemDropped(droppedItemType);
-                                }
+                            
+                            // Update UI quest khi drop item
+                            if (QuestManager.Instance != null)
+                            {
+                                QuestManager.Instance.OnItemDropped(droppedItemType);
                             }
                         }
+                    }
                     }
                 }
                 
@@ -384,21 +384,21 @@ public class PlayerController : MonoBehaviour
                             // Lấy item cuối cùng (nhặt vào sau cùng)
                             int lastIndex = carriedItems.Count - 1;
                             Item item = carriedItems[lastIndex];
-                            if (item != null)
-                            {
-                                ItemType droppedItemType = item.ItemType;
-                                item.ReturnToOriginalPosition();
+                        if (item != null)
+                        {
+                            ItemType droppedItemType = item.ItemType;
+                            item.ReturnToOriginalPosition();
                                 
                                 // Xóa item khỏi danh sách (xóa item cuối cùng)
                                 carriedItems.RemoveAt(lastIndex);
-                                
-                                // Update UI quest khi drop item
-                                if (QuestManager.Instance != null)
-                                {
-                                    QuestManager.Instance.OnItemDropped(droppedItemType);
-                                }
+                            
+                            // Update UI quest khi drop item
+                            if (QuestManager.Instance != null)
+                            {
+                                QuestManager.Instance.OnItemDropped(droppedItemType);
                             }
                         }
+                    }
                     }
                 }
                 

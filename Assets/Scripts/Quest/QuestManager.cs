@@ -119,16 +119,16 @@ public class QuestManager : MonoBehaviour
     
     /// <summary>
     /// Được gọi khi player drop item (do va chạm với car/animal)
-    /// KHÔNG giảm progress vì progress chưa được tính khi nhặt
+    /// KHÔNG giảm progress vì progress là số item đã thả tại checkpoint
+    /// Item rớt là item đang mang trên người, không liên quan đến progress
     /// </summary>
     public void OnItemDropped(ItemType itemType)
     {
-        // KHÔNG giảm progress vì progress chỉ được tính khi thả tại checkpoint
-        // Item rớt do va chạm không ảnh hưởng đến progress
+        // KHÔNG giảm progress vì progress là số item đã thả tại checkpoint
+        // Item rớt là item đang mang trên người, không ảnh hưởng đến progress
+        Debug.Log($"{itemType} dropped (item đang mang, không ảnh hưởng progress)");
 
-        Debug.Log($"{itemType} dropped (không ảnh hưởng progress)");
-
-        // Cập nhật objectives panel
+        // Cập nhật objectives panel (UI sẽ tự động cập nhật số lượng đang mang)
         UpdateQuestUI();
     }
     
@@ -145,10 +145,10 @@ public class QuestManager : MonoBehaviour
             return;
         }
 
-        // Tăng progress khi thả item tại checkpoint
+        // Tăng progress khi thả item tại checkpoint (có thể vượt quá requiredAmount)
         progress[itemType]++;
 
-        Debug.Log($"{itemType} collected at checkpoint: {progress[itemType]} / {GetRequiredAmount(itemType)}");
+        Debug.Log($"{itemType} collected at checkpoint: {progress[itemType]} / {GetRequiredAmount(itemType)} (có thể vượt quá)");
 
         // Cập nhật objectives panel
         Debug.Log("QuestManager: Đang cập nhật UI...");
